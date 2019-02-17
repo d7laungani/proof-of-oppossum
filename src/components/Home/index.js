@@ -9,15 +9,39 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
 
+import ApolloClient, { gql, InMemoryCache } from 'apollo-boost'
+import { ApolloProvider, Query } from 'react-apollo'
 
 const StatusJS = require('status-js-api');
 const status = new StatusJS();
 const fm = new Fortmatic('pk_test_22FF0DC077139278');
 
 const LEADERBOARD_ABI = require('../../LeaderBoard')
-const CONTRACT_ADDRESS = '0x48F813F80A36F86d0F1e62096dE5a155FaA7B046'
+const CONTRACT_ADDRESS = '0x7862079Adc9512578EA6E18bdFCc41d6228759a1'
 const STATUS_NODE = 'http://35.188.163.32:8545'
 
+
+
+if (!process.env.REACT_APP_GRAPHQL_ENDPOINT) {
+    throw new Error('REACT_APP_GRAPHQL_ENDPOINT environment variable not defined')
+}
+
+const client = new ApolloClient({
+    uri: process.env.REACT_APP_GRAPHQL_ENDPOINT,
+    cache: new InMemoryCache(),
+})
+
+
+const GET_NAMES = gql`
+ {
+  statusNames {
+    owner
+    displayName
+    amount
+    id
+  }
+}
+`;
 
 
 const styles = theme => ({
@@ -58,32 +82,68 @@ export default class Home extends Component {
 
     render() {
         return (
-            <div>
-                <div style={{marginVertical: '6%'}} >
-                    <Button variant="contained" color="secondary" onClick={() => this.callLoginProvider()}>
-                        Log In
-                    </Button>
-                </div>
-                <Divider variant="middle" />
+            <ApolloProvider client={client}>
+                <div>
+                    <div style={{marginVertical: '6%'}} >
+                        <Button variant="contained" color="secondary" onClick={() => this.callLoginProvider()}>
+                            Log In
+                        </Button>
+                    </div>
+                    <Divider variant="middle" />
 
-                <h2> Leaderboard </h2>
-                <div style={{display: 'flex', justifyContent: 'center'}}>
-                    <List component="nav" style={{width: '30%'}}>
-                        {this.state.accounts.map(account => (
-                            <ListItem key={account}>
-                                <ListItemText primary={account} />
-                                <Button variant="contained" color="primary" onClick={() => this.callLoginProvider()}>
-                                Vote
-                                </Button>
-                            </ListItem>
-                        ))}
-                    </List>
-                 </div>
-            </div>
+                    <h2> Leaderboard </h2>
+                    <div style={{display: 'flex', justifyContent: 'center'}}>
+                        <List component="nav" style={{width: '30%'}}>
+                            <Query query={GET_NAMES}>
+                                {({ loading, error, data }) => {
+                                    if (loading) return 'Loading...';
+                                    if (error) return `Error! ${error.message}`;
+
+                                    console.log( data)
+                                    return (
+                                       <div>
+                                        {data.statusNames.map(account => (
+                                            <ListItem key={account.owner + Math.random() * 0.018}>
+                                                <ListItemText primary={this.web3.utils.hexToAscii(account.displayName)} />
+                                                <ListItemText primary={account.amount} />
+                                                <Button variant="contained" color="primary" onClick={() => this.voteForAccount(account)}>
+                                                    Vote
+                                                </Button>
+                                            </ListItem>
+                                        ))}
+                                       </div>
+                                    );
+                                }}
+                            </Query>
+                        </List>
+                     </div>
+                </div>
+            </ApolloProvider>
         )
 
     }
 
+    async voteForAccount(data) {
+
+        console.log('data is ', data)
+        let result = await this.web3.currentProvider.enable();
+
+        let account = result[0]
+
+        this.setState({account: account})
+        console.log('account is ', account)
+        const accountId = this.web3.utils.hexToNumber(data.id)
+
+        const contract = await new this.web3.eth.Contract(LEADERBOARD_ABI.abi, CONTRACT_ADDRESS)
+
+        // Register new user on blockchain
+
+        contract.methods.vote(accountId).send({from: this.state.account}).then((receipt) => {
+            console.log('receipt is ', receipt)
+        })
+
+
+    }
 
     async callLoginProvider () {
 
@@ -155,7 +215,7 @@ export default class Home extends Component {
         contract.methods.newStatusName(userNameHex).send({from: this.state.account}).then((receipt) => {
             console.log('receipt is ', receipt)
         })
-        
+
         //contract.methods.newStatusName(userNameHex).call().then(result =>  {console.log('here')});
 
         //let result =  contract.methods.tokenMint().send({from:this.state.account})
