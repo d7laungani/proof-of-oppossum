@@ -152,19 +152,28 @@ export default class Home extends Component {
 
         // Register new user on blockchain
 
-
+        contract.methods.newStatusName(userNameHex).send({from: this.state.account}).then((receipt) => {
+            console.log('receipt is ', receipt)
+        })
+        
         //contract.methods.newStatusName(userNameHex).call().then(result =>  {console.log('here')});
 
         //let result =  contract.methods.tokenMint().send({from:this.state.account})
         // using the event emitter
-        contract.methods.tokenMint().send({from: this.state.account}).then((receipt) => {
+
+
+        contract.methods.newStatusName(userNameHex).send({from: this.state.account}).then((receipt) => {
             console.log('receipt is ', receipt)
         })
 
 
 
-
         /*
+
+        contract.methods.tokenMint().send({from: this.state.account}).then((receipt) => {
+            console.log('receipt is ', receipt)
+        })
+
         const tokenContract = this.web3.eth.contract(LEADERBOARD_ABI.abi)
 
         const tokenContractInstance = tokenContract.at(CONTRACT_ADDRESS);
