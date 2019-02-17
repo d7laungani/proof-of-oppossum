@@ -17,7 +17,7 @@ const status = new StatusJS();
 const fm = new Fortmatic('pk_test_22FF0DC077139278');
 
 const LEADERBOARD_ABI = require('../../LeaderBoard')
-const CONTRACT_ADDRESS = '0x7862079Adc9512578EA6E18bdFCc41d6228759a1'
+const CONTRACT_ADDRESS = '0x5B6EeED5D3fb6F278FB0FfA6a995B0De6a80c246'
 const STATUS_NODE = 'http://35.188.163.32:8545'
 
 
@@ -204,9 +204,11 @@ export default class Home extends Component {
         const publicKey = await status.getPublicKey();
         const userName = await status.getUserName();
 
+        this.setState({username: userName})
         console.log('public key is ', publicKey)
         console.log('username is ', userName)
         const userNameHex =  this.web3.utils.fromAscii(userName)
+
 
         const contract = await new this.web3.eth.Contract(LEADERBOARD_ABI.abi, CONTRACT_ADDRESS)
 
