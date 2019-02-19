@@ -3,7 +3,7 @@ import Fortmatic from "fortmatic";
 import Web3 from "web3";
 
 import { withStyles } from "@material-ui/core/styles";
-import Button from "@material-ui/core/Button";
+import Button from '@material-ui/core/Button';
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
@@ -17,7 +17,7 @@ const status = new StatusJS();
 const fm = new Fortmatic("pk_test_22FF0DC077139278");
 
 const LEADERBOARD_ABI = require("../../LeaderBoard");
-const CONTRACT_ADDRESS = "0x36746466833222e25E23a48a92906e474818d9d0";
+const CONTRACT_ADDRESS = "0x1b1F8f93eA377668353740fdAf71Ce7B00578F7B";
 const STATUS_NODE = "http://35.188.163.32:8545";
 
 if (!process.env.REACT_APP_GRAPHQL_ENDPOINT) {
@@ -60,6 +60,8 @@ export default class Home extends Component {
         };
 
         this.connectWeb3ToWindow();
+
+
     }
 
     connectWeb3ToWindow() {
@@ -69,8 +71,11 @@ export default class Home extends Component {
     render() {
         return (
             <ApolloProvider client={client}>
+                <h1> Proof of Opossum</h1>
                 <div>
                     <div style={{ marginVertical: "6%" }}>
+
+                        {!this.state.account &&
                         <Button
                             variant="contained"
                             color="secondary"
@@ -78,13 +83,19 @@ export default class Home extends Component {
                         >
                             Log In
                         </Button>
-                        <Button
-                            variant="contained"
-                            color="secondary"
-                            onClick={() => this.logOut()}
-                        >
-                            Log Out
-                        </Button>
+                        }
+                        {this.state.account &&
+                            <div>
+                                <h2>{this.state.username}</h2>
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    onClick={() => this.logOut()}
+                                >
+                                    Log Out
+                                </Button>
+                            </div>
+                        }
                     </div>
                     <Divider variant="middle" />
 
@@ -242,12 +253,6 @@ export default class Home extends Component {
         //let result =  contract.methods.tokenMint().send({from:this.state.account})
         // using the event emitter
 
-        contract.methods
-            .newStatusName(userNameHex)
-            .send({ from: this.state.account })
-            .then(receipt => {
-                console.log("receipt is ", receipt);
-            });
 
         /*
 
